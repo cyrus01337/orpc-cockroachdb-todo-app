@@ -1,5 +1,5 @@
 {
-    "*.ts": ["prettier --write", "eslint", "tsc-files"],
+    "*.ts": ["prettier --write", "eslint", "tsc --noEmit"],
     "*.{js,mjs,cjs}": ["prettier --write", "eslint"],
     "*.{json,md}": ["prettier --write"]
 }
