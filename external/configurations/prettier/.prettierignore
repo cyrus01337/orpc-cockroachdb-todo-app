@@ -1,0 +1,12 @@
+.astro/
+.devcontainer/devcontainer.json
+.next/
+.pnp.*
+.yarn/
+README.md
+build/
+bun.lockb
+coverage/
+dist/
+external/
+pnpm-lock.yaml
