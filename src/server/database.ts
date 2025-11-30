@@ -163,6 +163,34 @@ const getUserForSession = async (email: string): Promise<UserForSession> => {
     return pick(cachedUserFound, "email", "id", "todoEntries");
 };
 
+const populateUser = async (
+    userId: TodoEntry["userId"],
+    todoEntries: zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"],
+): Promise<TodoEntry[]> => {
+    const newTodoEntries = await SQL<TodoEntry[]>`
+        INSERT INTO todo_app.entries ${SQL(todoEntries)}
+        RETURNING *;
+    `;
+
+    const users = await fetchUsers();
+    const correspondingUserFound = users.find(user => user.id === userId);
+
+    if (!correspondingUserFound) {
+        throw new UserNotFound(userId);
+    }
+
+    if (!correspondingUserFound.todoEntries) {
+        correspondingUserFound.todoEntries = newTodoEntries;
+    } else {
+        correspondingUserFound.todoEntries = [
+            ...correspondingUserFound.todoEntries,
+            ...newTodoEntries,
+        ];
+    }
+
+    return correspondingUserFound.todoEntries;
+};
+
 const createTodoEntry = async (
     data: zod.infer<typeof sharedSchemas.CREATE_TODO>,
 ): Promise<TodoEntry> => {
@@ -270,6 +298,7 @@ export default {
     deleteTodoEntry,
     getUserForSession,
     logIn,
+    populateUser,
     readTodoEntries,
     signUp,
     updateTodoEntry,

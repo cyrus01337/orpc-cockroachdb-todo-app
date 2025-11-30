@@ -1,27 +1,56 @@
 "use client";
 
+import pick from "lodash/pick";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z as zod } from "zod";
 
 import Entry from "~/app/_components/entry";
 import EntryCreator from "~/app/_components/entry-creator";
 import LoadingEntry from "~/app/_components/entry/loading";
 import Render from "~/components/client/render";
+import useLocalTodoEntries from "~/hooks/use-local-todo-entries";
 import useTodoEntries from "~/hooks/use-todo-entries";
+import orpc from "~/orpc";
 import logging from "~/shared/logging";
+import sharedSchemas from "~/shared/schemas";
 
 const BUTTON_CLASS = "btn btn-primary min-w-24 rounded-lg";
 
 // TODO: Convert page only to server component
 export default function Home() {
-    const { data: session } = useSession();
+    const { data: session, update: mutateSession } = useSession();
     const [saving, setSaving] = useState(false);
+    const [localTodoEntries, setLocalTodoEntries] = useLocalTodoEntries();
     const [todoEntries, setTodoEntries] = useTodoEntries();
     const isLoading = session === undefined;
 
-    logging.log("Session:", session);
     logging.log("Todo Entries:", todoEntries);
+
+    const populateUser = async (userId: string) => {
+        const preparedEntries = localTodoEntries!.map(entry => ({
+            ...pick(entry, "completed", "description", "dueDate", "priority", "title"),
+
+            userId,
+        })) satisfies zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"];
+        const populatedEntries = await orpc.user.populate({
+            todoEntries: preparedEntries,
+            userId,
+        });
+
+        setLocalTodoEntries([]);
+        mutateSession({
+            todoEntries: populatedEntries,
+        });
+    };
+
+    useEffect(() => {
+        if (session && localTodoEntries && localTodoEntries.length > 0) {
+            logging.log("Session (Effect):", session);
+            populateUser(session.user.id);
+        }
+    }, [session]);
 
     return (
         <div className="flex h-dvh w-dvw flex-col">

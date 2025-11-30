@@ -16,7 +16,7 @@ const INTER = Inter({
 });
 export const metadata: Metadata = {
     title: "ORPC + CockroachDB Todo App",
-    description: "WIP",
+    description: "Generic intro project that handles CRUD operations for your own checklist",
 };
 
 export default function RootLayout(properties: Properties) {

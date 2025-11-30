@@ -117,5 +117,6 @@ const updateEntry = async ({ todoEntries, ...properties }: Properties) => {
 };
 
 export default {
+    resolveDueDate,
     updateEntry,
 };

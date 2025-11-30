@@ -9,6 +9,7 @@ import useTodoEntries from "~/hooks/use-todo-entries";
 import orpc from "~/orpc";
 import logging from "~/shared/logging";
 import sharedSchemas from "~/shared/schemas";
+import todos from "~/todos";
 
 import type { TodoEntry } from "~/shared/types";
 import type { PartialWithKeys } from "~/types";
@@ -91,6 +92,8 @@ export default function EntryCreator(properties: Properties) {
     // which guarantees the return type to be as follows
     const parsePartialEntry = async (
         partialEntry: PartialWithKeys<zod.infer<typeof sharedSchemas.CREATE_TODO>>,
+        // @ts-ignore: Return type is either what's returned or an error is raised,
+        // which guarantees the return type to be as follows
     ): Promise<zod.infer<typeof sharedSchemas.CREATE_TODO>> => {
         try {
             return await sharedSchemas.CREATE_TODO.parseAsync(partialEntry);
@@ -125,7 +128,7 @@ export default function EntryCreator(properties: Properties) {
                 completed: false,
                 createdAt: Date.now(),
                 description: descriptionReference.current?.value,
-                dueDate: dueDateReference.current?.valueAsNumber,
+                dueDate: todos.resolveDueDate(dueDateReference.current?.valueAsNumber),
                 id: crypto.randomUUID(),
                 priority: priority!,
                 title: titleReference.current?.value,
@@ -136,7 +139,7 @@ export default function EntryCreator(properties: Properties) {
         } else {
             const partialEntry = await parsePartialEntry({
                 description: descriptionReference.current?.value,
-                dueDate: dueDateReference.current?.valueAsNumber,
+                dueDate: todos.resolveDueDate(dueDateReference.current?.valueAsNumber),
                 title: titleReference.current?.value,
                 priority: priority!,
                 userId: session?.user.id,

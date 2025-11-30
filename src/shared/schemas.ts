@@ -17,6 +17,20 @@ const CREATE_TODO = TODO.pick({
     title: true,
     userId: true,
 });
+const POPULATE_USER = TODO.pick({ userId: true }).and(
+    zod.object({
+        todoEntries: zod.array(
+            TODO.pick({
+                completed: true,
+                description: true,
+                dueDate: true,
+                priority: true,
+                title: true,
+                userId: true,
+            }),
+        ),
+    }),
+);
 const UPDATE_TODO = TODO.pick({
     completed: true,
     description: true,
@@ -28,6 +42,7 @@ const UPDATE_TODO = TODO.pick({
 
 export default {
     CREATE_TODO,
+    POPULATE_USER,
     TODO,
     UPDATE_TODO,
 };

@@ -4,6 +4,9 @@ import omit from "lodash/omit";
 import database from "~/server/database";
 import sharedSchemas from "~/shared/schemas";
 
+export const populateUser = os
+    .input(sharedSchemas.POPULATE_USER)
+    .handler(async ({ input }) => await database.populateUser(input.userId, input.todoEntries));
 export const createTodo = os
     .input(sharedSchemas.CREATE_TODO)
     .handler(async ({ input }) => await database.createTodoEntry(input));
@@ -25,5 +28,8 @@ export const router = {
         readAll: readAllTodos,
         update: updateTodo,
         delete: deleteTodo,
+    },
+    user: {
+        populate: populateUser,
     },
 };

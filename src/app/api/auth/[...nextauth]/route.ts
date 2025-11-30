@@ -11,14 +11,22 @@ import type { ServerLoginCredentials } from "~/server/types";
 
 const HANDLER = NextAuth({
     callbacks: {
-        session: async ({ session }) => ({
-            ...session,
+        session: async ({ session: defaultSession }) => {
+            try {
+                return {
+                    ...defaultSession,
 
-            user: {
-                ...session.user,
-                ...(await database.getUserForSession(session.user.email)),
-            },
-        }),
+                    user: {
+                        ...defaultSession.user,
+                        ...(await database.getUserForSession(defaultSession.user.email)),
+                    },
+                };
+            } catch (error) {
+                logging.log(`User not found, using default session...`);
+
+                return defaultSession;
+            }
+        },
     },
     pages: {
         newUser: "/",

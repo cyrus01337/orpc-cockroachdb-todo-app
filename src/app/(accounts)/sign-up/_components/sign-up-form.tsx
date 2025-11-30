@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
+import useTodoEntries from "~/hooks/use-todo-entries";
+import orpc from "~/orpc";
 import { ClientLoginCredentials } from "~/shared/types";
 
 export default function SignUpForm() {
@@ -23,12 +25,13 @@ export default function SignUpForm() {
 
         if (response.ok) {
             const rawCredentials = {
-                email,
                 password: formData.get("password") as string,
+                email,
             } satisfies ClientLoginCredentials;
 
-            signIn("credentials", {
+            await signIn("credentials", {
                 ...rawCredentials,
+
                 callbackUrl: "/",
             });
         } else {
