@@ -21,7 +21,7 @@ const HANDLER = NextAuth({
                         ...(await database.getUserForSession(defaultSession.user.email)),
                     },
                 };
-            } catch (error) {
+            } catch (_error) {
                 logging.log(`User not found, using default session...`);
 
                 return defaultSession;

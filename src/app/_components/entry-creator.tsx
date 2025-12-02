@@ -15,21 +15,21 @@ import type { TodoEntry } from "~/shared/types";
 import type { PartialWithKeys } from "~/types";
 import type {
     ChangeEventHandler,
-    Dispatch,
     FormEventHandler,
     MouseEventHandler,
     RefObject,
-    SetStateAction,
 } from "react";
+import { savingEntryAtom } from "~/store";
+import { useAtom } from "jotai";
 
 interface Properties {
-    setSaving: Dispatch<SetStateAction<boolean>>;
     setTodoEntries: (todoEntries: TodoEntry[]) => void;
 }
 
 const DEFAULT_PRIORITY = "Select priority";
 
 export default function EntryCreator(properties: Properties) {
+    const [, setSaving] = useAtom(savingEntryAtom);
     const modalReference = useRef<HTMLDialogElement>(null);
     const titleReference = useRef<HTMLInputElement>(null);
     const descriptionReference = useRef<HTMLInputElement>(null);
@@ -121,7 +121,7 @@ export default function EntryCreator(properties: Properties) {
     };
 
     const saveEntry: FormEventHandler<HTMLFormElement> = async () => {
-        properties.setSaving(true);
+        setSaving(true);
 
         if (!session) {
             const newEntry = await parseLocalEntry({
@@ -150,7 +150,7 @@ export default function EntryCreator(properties: Properties) {
         }
 
         resetFields();
-        properties.setSaving(false);
+        setSaving(false);
     };
 
     return (

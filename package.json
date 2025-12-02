@@ -20,6 +20,7 @@
         "@orpc/server": "^1.11.3",
         "@t3-oss/env-core": "^0.13.8",
         "argon2": "^0.44.0",
+        "jotai": "^2.15.2",
         "lodash": "^4.17.21",
         "next": "15",
         "next-auth": "^4.24.13",

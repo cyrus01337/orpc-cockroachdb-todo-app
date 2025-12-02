@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { Inter } from "next/font/google";
 
 import AuthProvider from "~/components/client/auth-provider";
+import { Provider as JotaiProvider } from "jotai";
 
 import type { Metadata } from "next";
 
@@ -23,7 +24,11 @@ export default function RootLayout(properties: Properties) {
     return (
         <html className={INTER.className} lang="en">
             <body>
-                <AuthProvider>{properties.children}</AuthProvider>
+                <AuthProvider>
+                    <JotaiProvider>
+                        {properties.children}
+                    </JotaiProvider>
+                </AuthProvider>
             </body>
         </html>
     );
