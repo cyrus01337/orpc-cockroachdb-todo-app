@@ -10,8 +10,6 @@ export default createEnv({
     runtimeEnv: process.env,
     server: {
         COCKROACHDB_CONNECTION_URL: zod.url(),
-        COCKROACHDB_PASSWORD: zod.string().min(1),
-        COCKROACHDB_USER: zod.string().min(1),
         NEXTAUTH_SECRET: zod.string().min(1),
         NEXTAUTH_URL: zod.url(),
     },
