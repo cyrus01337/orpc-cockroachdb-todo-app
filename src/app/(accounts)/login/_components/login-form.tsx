@@ -33,42 +33,42 @@ export default function LoginForm(properties: Properties) {
     return (
         <form className="space-y-4 md:space-y-6" onSubmit={handleSignIn}>
             <div>
-                <input name="csrfToken" type="hidden" defaultValue={properties.csrfToken} />
+                <input defaultValue={properties.csrfToken} name="csrfToken" type="hidden" />
 
                 <label
-                    htmlFor="email"
                     className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                    htmlFor="email"
                 >
                     Email
                 </label>
 
                 <input
-                    type="email"
-                    name="email"
-                    id="email"
                     className="focus:ring-primary-600 focus:border-primary-600 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-                    placeholder="name@company.com"
                     defaultValue={email}
+                    id="email"
+                    name="email"
                     onInput={event => setEmail(event.currentTarget.value)}
+                    placeholder="name@company.com"
                     required
+                    type="email"
                 />
             </div>
 
             <div>
                 <label
-                    htmlFor="password"
                     className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                    htmlFor="password"
                 >
                     Password
                 </label>
 
                 <input
-                    type="password"
-                    name="password"
-                    id="password"
-                    placeholder="••••••••"
                     className="focus:ring-primary-600 focus:border-primary-600 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+                    id="password"
+                    name="password"
+                    placeholder="••••••••"
                     required
+                    type="password"
                 />
             </div>
 
@@ -76,17 +76,17 @@ export default function LoginForm(properties: Properties) {
 
             <div className="flex items-center justify-between">
                 <a
-                    href="/forgot-password"
                     className="text-primary dark:text-primary-500 text-sm font-medium hover:underline"
+                    href="/forgot-password"
                 >
                     Forgot password?
                 </a>
             </div>
 
             <button
-                type="submit"
                 className="btn btn-primary w-full rounded-lg"
                 disabled={loggingIn}
+                type="submit"
             >
                 {!loggingIn ? (
                     "Log In"
@@ -97,7 +97,7 @@ export default function LoginForm(properties: Properties) {
 
             <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don't have an account yet?{" "}
-                <a href="/sign-up" className="text-primary font-medium hover:underline">
+                <a className="text-primary font-medium hover:underline" href="/sign-up">
                     Sign up
                 </a>
             </p>

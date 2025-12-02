@@ -22,8 +22,8 @@ export default async function Login() {
         <section className="bg-gray-50 dark:bg-gray-900">
             <div className="mx-auto flex flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
                 <Link
-                    href="/"
                     className="mb-6 flex items-center text-2xl font-semibold text-gray-900 dark:text-white"
+                    href="/"
                 >
                     Next Auth Boilerplate
                 </Link>

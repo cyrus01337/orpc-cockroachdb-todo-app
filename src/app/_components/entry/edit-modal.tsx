@@ -87,17 +87,17 @@ export default function EditModal(properties: EditModalProperties) {
                 <form method="dialog">
                     <button className="btn btn-sm btn-circle btn-ghost absolute top-2 right-2">
                         <svg
-                            xmlns="http://www.w3.org/2000/svg"
+                            className="size-6"
                             fill="none"
-                            viewBox="0 0 24 24"
                             strokeWidth={1.5}
                             stroke="currentColor"
-                            className="size-6"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
                         >
                             <path
+                                d="M6 18 18 6M6 6l12 12"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                d="M6 18 18 6M6 6l12 12"
                             />
                         </svg>
                     </button>

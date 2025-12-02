@@ -56,8 +56,8 @@ export default function SignUpForm() {
                     name="email"
                     onInput={event => setEmail(event.currentTarget.value)}
                     placeholder="name@company.com"
-                    type="email"
                     required
+                    type="email"
                 />
             </div>
 
@@ -74,8 +74,8 @@ export default function SignUpForm() {
                     id="password"
                     name="password"
                     placeholder="••••••••"
-                    type="password"
                     required
+                    type="password"
                 />
             </div>
 

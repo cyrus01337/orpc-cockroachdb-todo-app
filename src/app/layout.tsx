@@ -25,9 +25,7 @@ export default function RootLayout(properties: Properties) {
         <html className={INTER.className} lang="en">
             <body>
                 <AuthProvider>
-                    <JotaiProvider>
-                        {properties.children}
-                    </JotaiProvider>
+                    <JotaiProvider>{properties.children}</JotaiProvider>
                 </AuthProvider>
             </body>
         </html>
