@@ -97,7 +97,6 @@ const fetchUsers = async () => {
     return cachedUsers;
 };
 
-// TODO: Implement login functionality
 const logIn = async (credentials: ServerLoginCredentials): Promise<UserForSession> => {
     for (const user of await fetchUsers()) {
         if (user.email !== credentials.email) {
@@ -112,7 +111,6 @@ const logIn = async (credentials: ServerLoginCredentials): Promise<UserForSessio
     throw new UserNotFound(credentials.email);
 };
 
-// TODO: Implement sign up functionality
 const signUp = async (credentials: ClientLoginCredentials): Promise<UserForSession> => {
     const users = await fetchUsers();
     const userFound = users.find(record => record.email === credentials.email);
