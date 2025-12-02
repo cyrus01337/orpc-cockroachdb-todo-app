@@ -167,6 +167,13 @@ const getUserForSession = async (email: string): Promise<UserForSession> => {
     return pick(cachedUserFound, "email", "id", "isNewUser", "todoEntries");
 };
 
+const disableNewUserFlag = async (userId: TodoEntry["userId"]) => {
+    await SQL`
+        UPDATE todo_app.users SET is_new_user = FALSE
+        WHERE id = ${userId};
+    `;
+};
+
 const populateNewUser = async (
     userId: TodoEntry["userId"],
     todoEntries: zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"],
@@ -176,10 +183,7 @@ const populateNewUser = async (
         RETURNING *;
     `;
 
-    await SQL`
-        UPDATE todo_app.users SET is_new_user = FALSE
-        WHERE id = ${userId};
-    `;
+    await disableNewUserFlag(userId);
 
     const users = await fetchUsers();
     const correspondingUserFound = users.find(user => user.id === userId);
@@ -307,9 +311,10 @@ const deleteTodoEntry = async (id: TodoEntry["id"], userId: TodoEntry["userId"])
 export default {
     createTodoEntry,
     deleteTodoEntry,
+    disableNewUserFlag,
     getUserForSession,
     logIn,
-    populateUser: populateNewUser,
+    populateNewUser,
     readTodoEntries,
     signUp,
     updateTodoEntry,
