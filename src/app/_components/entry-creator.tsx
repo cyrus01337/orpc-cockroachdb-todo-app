@@ -199,12 +199,12 @@ export default function EntryCreator(properties: Properties) {
 
                     <div className="flex flex-col gap-2 pb-8">
                         <input
-                            className="input input-ghost input-xl font-bold"
+                            className="input input-xl font-bold"
                             placeholder="Enter title here..."
                             ref={titleReference}
                         />
                         <input
-                            className="input input-ghost"
+                            className="input"
                             placeholder="Enter description here..."
                             ref={descriptionReference}
                         />
