@@ -7,9 +7,13 @@ When you create an account, your data will persist using a CockroachDB database 
 
 This app showcases familiarity with the following:
 - ESLint
+- Prettier
 - TypeScript
 - React
 - NextJS
 - Tailwind CSS
 - RPC via oRPC
 - Auth via Next Auth
+- PostgreSQL
+- Type-safe, consistent environment variables via @t3-oss/env-core
+- Pre-commits via Husky
