@@ -3,6 +3,7 @@
 import pick from "lodash/pick";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { z as zod } from "zod";
 
@@ -18,15 +19,16 @@ import sharedSchemas from "~/shared/schemas";
 
 const BUTTON_CLASS = "btn btn-primary min-w-24 rounded-lg";
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const DO_NOTHING = () => {};
+
 // TODO: Convert page only to server component
 export default function Home() {
+    const [localTodoEntries, setLocalTodoEntries] = useLocalTodoEntries();
     const { data: session, update: mutateSession } = useSession();
     const [saving, setSaving] = useState(false);
-    const [localTodoEntries, setLocalTodoEntries] = useLocalTodoEntries();
     const [todoEntries, setTodoEntries] = useTodoEntries();
     const isLoading = session === undefined;
-
-    logging.log("Todo Entries:", todoEntries);
 
     const populateUser = async (userId: string) => {
         const preparedEntries = localTodoEntries!.map(entry => ({
@@ -34,23 +36,28 @@ export default function Home() {
 
             userId,
         })) satisfies zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"];
-        const populatedEntries = await orpc.user.populate({
+        const populatedEntries = await orpc.user.populateNewUser({
             todoEntries: preparedEntries,
             userId,
         });
 
         setLocalTodoEntries([]);
         mutateSession({
+            isNewUser: false,
             todoEntries: populatedEntries,
         });
     };
 
     useEffect(() => {
-        if (session && localTodoEntries && localTodoEntries.length > 0) {
+        if (session?.user.isNewUser && localTodoEntries && localTodoEntries.length > 0) {
             logging.log("Session (Effect):", session);
             populateUser(session.user.id);
         }
+
+        return DO_NOTHING;
     }, [session]);
+
+    logging.log("Todo Entries:", todoEntries);
 
     return (
         <div className="flex h-dvh w-dvw flex-col">

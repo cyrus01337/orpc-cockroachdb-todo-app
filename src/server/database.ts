@@ -14,6 +14,7 @@ interface DatabaseUser {
     createdAt: number;
     email: string;
     id: string;
+    isNewUser: boolean;
     passwordHash: string;
     todoEntries: TodoEntry[];
 }
@@ -21,6 +22,7 @@ interface DatabaseUser {
 export interface UserForSession {
     email: string;
     id: string;
+    isNewUser: boolean;
     todoEntries: TodoEntry[];
 }
 
@@ -78,10 +80,11 @@ const fetchUsers = async () => {
 
     const partialUsers = await SQL<Omit<DatabaseUser[], "todoEntries">>`
         SELECT
-            id,
+            created_at,
             email,
-            password_hash,
-            created_at
+            id,
+            is_new_user,
+            password_hash
         FROM todo_app.users;
     `;
     const todoEntries = await SQL<TodoEntry[]>`SELECT * FROM todo_app.entries`;
@@ -103,7 +106,7 @@ const logIn = async (credentials: ServerLoginCredentials): Promise<UserForSessio
             throw new IncorrectPassword(credentials.email);
         }
 
-        return pick(user, "email", "id", "todoEntries");
+        return pick(user, "email", "id", "isNewUser", "todoEntries");
     }
 
     throw new UserNotFound(credentials.email);
@@ -129,8 +132,9 @@ const signUp = async (credentials: ClientLoginCredentials): Promise<UserForSessi
     }
 
     const userForSession = {
+        ...pick(newUserFound, "id", "isNewUser"),
+
         email: credentials.email,
-        id: newUserFound.id,
         todoEntries: [] as TodoEntry[],
     } satisfies UserForSession;
 
@@ -160,10 +164,10 @@ const getUserForSession = async (email: string): Promise<UserForSession> => {
         };
     }
 
-    return pick(cachedUserFound, "email", "id", "todoEntries");
+    return pick(cachedUserFound, "email", "id", "isNewUser", "todoEntries");
 };
 
-const populateUser = async (
+const populateNewUser = async (
     userId: TodoEntry["userId"],
     todoEntries: zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"],
 ): Promise<TodoEntry[]> => {
@@ -172,12 +176,19 @@ const populateUser = async (
         RETURNING *;
     `;
 
+    await SQL`
+        UPDATE todo_app.users SET is_new_user = FALSE
+        WHERE id = ${userId};
+    `;
+
     const users = await fetchUsers();
     const correspondingUserFound = users.find(user => user.id === userId);
 
     if (!correspondingUserFound) {
         throw new UserNotFound(userId);
     }
+
+    correspondingUserFound.isNewUser = false;
 
     if (!correspondingUserFound.todoEntries) {
         correspondingUserFound.todoEntries = newTodoEntries;
@@ -298,7 +309,7 @@ export default {
     deleteTodoEntry,
     getUserForSession,
     logIn,
-    populateUser,
+    populateUser: populateNewUser,
     readTodoEntries,
     signUp,
     updateTodoEntry,

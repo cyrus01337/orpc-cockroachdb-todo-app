@@ -3,8 +3,6 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 
-import useTodoEntries from "~/hooks/use-todo-entries";
-import orpc from "~/orpc";
 import { ClientLoginCredentials } from "~/shared/types";
 
 export default function SignUpForm() {

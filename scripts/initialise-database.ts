@@ -13,7 +13,8 @@ await SQL`
         id SERIAL UNIQUE,
         email VARCHAR(128) NOT NULL UNIQUE,
         password_hash VARCHAR(128) NOT NULL,
-        created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now()::timestamp
+        created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT now()::timestamp,
+        is_new_user BOOLEAN DEFAULT TRUE
     );
 
     CREATE TABLE IF NOT EXISTS todo_app.entries(

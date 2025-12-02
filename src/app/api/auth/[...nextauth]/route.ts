@@ -29,7 +29,6 @@ const HANDLER = NextAuth({
         },
     },
     pages: {
-        newUser: "/",
         signIn: "/login",
         signOut: "/logout",
     },
@@ -93,6 +92,9 @@ const HANDLER = NextAuth({
         }),
     ],
     secret: environment.NEXTAUTH_SECRET,
+    session: {
+        strategy: "jwt",
+    },
 });
 
 export { HANDLER as GET, HANDLER as POST };
