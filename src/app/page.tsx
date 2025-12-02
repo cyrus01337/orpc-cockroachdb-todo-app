@@ -20,7 +20,7 @@ import sharedSchemas from "~/shared/schemas";
 const BUTTON_CLASS = "btn btn-primary min-w-24 rounded-lg";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-const DO_NOTHING = () => {};
+const DO_NOTHING = () => { };
 
 // TODO: Convert page only to server component
 export default function Home() {
@@ -53,7 +53,7 @@ export default function Home() {
             logging.log("Session (Effect):", session);
             populateUser(session.user.id);
         } else if (session?.user.isNewUser) {
-            orpc.user.disableNewUserFlag(session.user.id);
+            orpc.user.disableNewUserFlag({ userId: session.user.id });
         }
 
         return DO_NOTHING;
@@ -102,12 +102,12 @@ export default function Home() {
 
                         {todoEntries && todoEntries.length > 0
                             ? todoEntries.map(data => (
-                                  <Entry
-                                      key={`entry-${data.id}`}
-                                      setTodoEntries={setTodoEntries}
-                                      {...data}
-                                  />
-                              ))
+                                <Entry
+                                    key={`entry-${data.id}`}
+                                    setTodoEntries={setTodoEntries}
+                                    {...data}
+                                />
+                            ))
                             : null}
 
                         {saving ? <LoadingEntry /> : null}
