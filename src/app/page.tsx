@@ -52,6 +52,8 @@ export default function Home() {
         if (session?.user.isNewUser && localTodoEntries && localTodoEntries.length > 0) {
             logging.log("Session (Effect):", session);
             populateUser(session.user.id);
+        } else if (session?.user.isNewUser) {
+            orpc.user.disableNewUserFlag(session.user.id);
         }
 
         return DO_NOTHING;

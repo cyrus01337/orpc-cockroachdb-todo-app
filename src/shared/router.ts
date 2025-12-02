@@ -6,7 +6,7 @@ import sharedSchemas from "~/shared/schemas";
 
 export const populateNewUser = os
     .input(sharedSchemas.POPULATE_USER)
-    .handler(async ({ input }) => await database.populateUser(input.userId, input.todoEntries));
+    .handler(async ({ input }) => await database.populateNewUser(input.userId, input.todoEntries));
 export const createTodo = os
     .input(sharedSchemas.CREATE_TODO)
     .handler(async ({ input }) => await database.createTodoEntry(input));
@@ -20,6 +20,9 @@ export const updateTodo = os
 export const deleteTodo = os
     .input(sharedSchemas.TODO.pick({ id: true, userId: true }))
     .handler(async ({ input }) => await database.deleteTodoEntry(input.id, input.userId));
+export const disableNewUserFlag = os
+    .input(sharedSchemas.DISABLE_NEW_USER_FLAG)
+    .handler(async ({ input }) => await database.disableNewUserFlag(input.userId));
 
 export const router = {
     todos: {
@@ -30,6 +33,7 @@ export const router = {
         delete: deleteTodo,
     },
     user: {
+        disableNewUserFlag,
         populateNewUser,
     },
 };

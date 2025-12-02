@@ -39,9 +39,11 @@ const UPDATE_TODO = TODO.pick({
     priority: true,
     title: true,
 });
+const DISABLE_NEW_USER_FLAG = todo.pick({ userId: true });
 
 export default {
     CREATE_TODO,
+    DISABLE_NEW_USER_FLAG,
     POPULATE_USER,
     TODO,
     UPDATE_TODO,
