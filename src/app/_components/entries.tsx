@@ -17,7 +17,7 @@ import sharedSchemas from "~/shared/schemas";
 import { z as zod } from "zod";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-const DO_NOTHING = () => { };
+const DO_NOTHING = () => {};
 
 export default function Entries() {
     const [saving] = useAtom(savingEntryAtom);
@@ -72,12 +72,12 @@ export default function Entries() {
 
                     {todoEntries && todoEntries.length > 0
                         ? todoEntries.map(data => (
-                            <Entry
-                                key={`entry-${data.id}`}
-                                setTodoEntries={setTodoEntries}
-                                {...data}
-                            />
-                        ))
+                              <Entry
+                                  key={`entry-${data.id}`}
+                                  setTodoEntries={setTodoEntries}
+                                  {...data}
+                              />
+                          ))
                         : null}
 
                     {saving ? <LoadingEntry /> : null}
