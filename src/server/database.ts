@@ -1,5 +1,5 @@
 import argon2 from "argon2";
-import pick from "lodash/pick";
+import { pick, omit } from "lodash";
 import postgres from "postgres";
 import { z as zod } from "zod";
 
@@ -45,7 +45,7 @@ const SQL = postgres(environment.COCKROACHDB_CONNECTION_URL, {
         },
     },
 });
-let cachedUsers: DatabaseUser[];
+const cachedUsers: DatabaseUser[] = [];
 
 export class DatabaseError extends Error {}
 
@@ -73,66 +73,113 @@ class EntryNotFound extends DatabaseError {
     }
 }
 
-const fetchUsers = async () => {
-    if (cachedUsers) {
-        return cachedUsers;
+const getUser = async ({
+    email,
+    id,
+}: Partial<Pick<DatabaseUser, "email" | "id">>): Promise<DatabaseUser> => {
+    const cachedUserFound = cachedUsers.find(user => user.email === email || user.id === id);
+
+    if (cachedUserFound) {
+        return cachedUserFound;
     }
 
-    const partialUsers = await SQL<Omit<DatabaseUser[], "todoEntries">>`
+    let condition = SQL``;
+
+    if (email && id) {
+        condition = SQL`email = ${email} OR id = ${id}`;
+    } else if (email) {
+        condition = SQL`email = ${email}`;
+    } else if (id) {
+        condition = SQL`id = ${id}`;
+    }
+
+    const [partialUserFound] = await SQL<Omit<DatabaseUser, "todoEntries">[]>`
         SELECT
             created_at,
             email,
             id,
             is_new_user,
             password_hash
-        FROM todo_app.users;
+        FROM todo_app.users
+        WHERE ${condition}
+        LIMIT 1;
     `;
-    const todoEntries = await SQL<TodoEntry[]>`SELECT * FROM todo_app.entries`;
-    cachedUsers = partialUsers.map(partialUser => ({
-        ...partialUser,
 
-        todoEntries: todoEntries.filter(entry => entry.userId === partialUser.id),
-    }));
+    if (!partialUserFound) {
+        throw new UserNotFound(`Email = ${email}, ID = ${id}`);
+    }
 
-    return cachedUsers;
+    const todoEntries = await SQL<TodoEntry[]>`
+        SELECT
+            completed,
+            created_at,
+            description,
+            due_date,
+            id,
+            priority,
+            title,
+            user_id
+        FROM todo_app.entries
+        WHERE user_id = ${partialUserFound.id}
+        ORDER BY created_at ASC;
+    `;
+    const user = {
+        ...partialUserFound,
+
+        todoEntries: [...todoEntries],
+    } satisfies DatabaseUser;
+
+    cachedUsers.push(user);
+
+    return user;
 };
 
-const logIn = async (credentials: ServerLoginCredentials): Promise<UserForSession> => {
-    for (const user of await fetchUsers()) {
-        if (user.email !== credentials.email) {
-            continue;
-        } else if (!(await argon2.verify(user.passwordHash, credentials.password))) {
-            throw new IncorrectPassword(credentials.email);
+const userExists = async ({
+    email,
+    id,
+}: Partial<Pick<DatabaseUser, "email" | "id">>): Promise<boolean> => {
+    try {
+        await getUser({ email, id });
+
+        return true;
+    } catch (error) {
+        if (error instanceof UserNotFound) {
+            return false;
         }
 
-        return pick(user, "email", "id", "isNewUser", "todoEntries");
+        throw error;
     }
-
-    throw new UserNotFound(credentials.email);
 };
 
-const signUp = async (credentials: ClientLoginCredentials): Promise<UserForSession> => {
-    const users = await fetchUsers();
-    const userFound = users.find(record => record.email === credentials.email);
+const logIn = async ({ email, password }: ServerLoginCredentials): Promise<UserForSession> => {
+    const user = await getUser({ email });
 
-    if (userFound) {
-        throw new UserExists(credentials.email);
+    if (!(await argon2.verify(user.passwordHash, password))) {
+        throw new IncorrectPassword(email);
     }
 
-    const passwordHash = await argon2.hash(credentials.password);
+    return omit(user, "passwordHash");
+};
+
+const signUp = async ({ email, password }: ClientLoginCredentials): Promise<UserForSession> => {
+    if (await userExists({ email })) {
+        throw new UserExists(email);
+    }
+
+    const passwordHash = await argon2.hash(password);
     const [newUserFound] = await SQL<DatabaseUser[]>`
-        INSERT INTO todo_app.users ${SQL({ email: credentials.email, passwordHash })}
+        INSERT INTO todo_app.users ${SQL({ email, passwordHash })}
         RETURNING *;
     `;
 
     if (!newUserFound) {
-        throw new DatabaseError(`Failed to retrieve ${credentials.email} during creation`);
+        throw new DatabaseError(`Failed to retrieve ${email} during creation`);
     }
 
     const userForSession = {
         ...pick(newUserFound, "id", "isNewUser"),
 
-        email: credentials.email,
+        email: email,
         todoEntries: [] as TodoEntry[],
     } satisfies UserForSession;
 
@@ -141,39 +188,22 @@ const signUp = async (credentials: ClientLoginCredentials): Promise<UserForSessi
     return userForSession;
 };
 
-const getUserForSession = async (email: string): Promise<UserForSession> => {
-    const users = await fetchUsers();
-    const cachedUserFound = users.find(user => user.email === email);
-
-    if (!cachedUserFound) {
-        const [userFound] = await SQL<Omit<UserForSession[], "email">>`
-            SELECT email, id FROM todo_app.users
-            WHERE email = ${email};
-        `;
-
-        if (!userFound) {
-            throw new UserNotFound(email);
-        }
-
-        return {
-            ...userFound,
-
-            email,
-        };
-    }
-
-    return pick(cachedUserFound, "email", "id", "isNewUser", "todoEntries");
-};
+const getUserForSession = async (email: string): Promise<UserForSession> =>
+    pick(await getUser({ email }), "email", "id", "isNewUser", "todoEntries");
 
 const disableNewUserFlag = async (userId: TodoEntry["userId"]) => {
     await SQL`
         UPDATE todo_app.users SET is_new_user = FALSE
         WHERE id = ${userId};
     `;
+
+    const user = await getUser({ id: userId });
+
+    user.isNewUser = false;
 };
 
 const populateNewUser = async (
-    userId: TodoEntry["userId"],
+    id: TodoEntry["userId"],
     todoEntries: zod.infer<typeof sharedSchemas.POPULATE_USER>["todoEntries"],
 ): Promise<TodoEntry[]> => {
     const newTodoEntries = await SQL<TodoEntry[]>`
@@ -181,27 +211,12 @@ const populateNewUser = async (
         RETURNING *;
     `;
 
-    await disableNewUserFlag(userId);
+    await disableNewUserFlag(id);
 
-    const users = await fetchUsers();
-    const correspondingUserFound = users.find(user => user.id === userId);
+    const user = await getUser({ id });
+    user.todoEntries = [...newTodoEntries];
 
-    if (!correspondingUserFound) {
-        throw new UserNotFound(userId);
-    }
-
-    correspondingUserFound.isNewUser = false;
-
-    if (!correspondingUserFound.todoEntries) {
-        correspondingUserFound.todoEntries = newTodoEntries;
-    } else {
-        correspondingUserFound.todoEntries = [
-            ...correspondingUserFound.todoEntries,
-            ...newTodoEntries,
-        ];
-    }
-
-    return correspondingUserFound.todoEntries;
+    return newTodoEntries;
 };
 
 const createTodoEntry = async (
@@ -216,29 +231,14 @@ const createTodoEntry = async (
         throw new DatabaseError(`Failed to retrieve entry of user ID ${data.userId} during update`);
     }
 
-    const users = await fetchUsers();
-    const correspondingUserFound = users.find(user => user.id === data.userId);
-
-    if (correspondingUserFound) {
-        correspondingUserFound.todoEntries.push(newEntryFound);
-    }
+    const user = await getUser({ id: data.userId });
+    user.todoEntries.push(newEntryFound);
 
     return newEntryFound;
 };
 
-async function readTodoEntries(): Promise<TodoEntry[]>;
-async function readTodoEntries(id: TodoEntry["id"]): Promise<TodoEntry | null>;
-async function readTodoEntries(id?: TodoEntry["id"]): Promise<TodoEntry[] | TodoEntry | null> {
-    const userFound = cachedUsers.find(user => user.id === id);
-
-    if (userFound) {
-        return userFound.todoEntries;
-    }
-
-    return await SQL<TodoEntry[]>`
-        SELECT * FROM todo_app.entries ${!id ? SQL`` : SQL`WHERE user_id = ${id}`}
-    `;
-}
+const readTodoEntries = async (userId: TodoEntry["userId"]): Promise<TodoEntry[]> =>
+    (await getUser({ id: userId })).todoEntries;
 
 const updateTodoEntry = async (
     id: TodoEntry["id"],
@@ -254,20 +254,8 @@ const updateTodoEntry = async (
         throw new DatabaseError(`Failed to find and update entry ${id}`);
     }
 
-    const users = await fetchUsers();
-    const correspondingUserFound = users.find(user => user.id === updatedEntryFound.userId);
-
-    if (!correspondingUserFound) {
-        logging.log(
-            `Unable to find user ${updatedEntryFound.userId} to update cached entry ${id}, skipping...`,
-        );
-
-        throw new UserNotFound(updatedEntryFound.userId);
-    }
-
-    const correspondingEntryFound = correspondingUserFound.todoEntries.find(
-        entry => entry.id === id,
-    );
+    const user = await getUser({ id: updatedEntryFound.userId });
+    const correspondingEntryFound = user.todoEntries.find(entry => entry.id === id);
 
     if (!correspondingEntryFound) {
         logging.log(`Unable to locate cached entry ${id} for update, skipping...`);
@@ -275,8 +263,8 @@ const updateTodoEntry = async (
         throw new EntryNotFound(id);
     }
 
-    const index = correspondingUserFound.todoEntries.indexOf(correspondingEntryFound);
-    correspondingUserFound.todoEntries[index] = updatedEntryFound;
+    const index = user.todoEntries.indexOf(correspondingEntryFound);
+    user.todoEntries[index] = updatedEntryFound;
 
     return updatedEntryFound;
 };
@@ -286,24 +274,14 @@ const deleteTodoEntry = async (id: TodoEntry["id"], userId: TodoEntry["userId"])
         DELETE FROM todo_app.entries WHERE id = ${id};
     `;
 
-    const users = await fetchUsers();
-    const correspondingUserFound = users.find(user => user.id === userId);
-
-    if (!correspondingUserFound) {
-        return;
-    }
-
-    const correspondingEntryFound = correspondingUserFound.todoEntries.find(
-        entry => entry.id === id,
-    );
+    const user = await getUser({ id: userId });
+    const correspondingEntryFound = user.todoEntries.find(entry => entry.id === id);
 
     if (!correspondingEntryFound) {
         return;
     }
 
-    correspondingUserFound.todoEntries = correspondingUserFound.todoEntries.filter(
-        entry => entry.id !== id,
-    );
+    user.todoEntries = user.todoEntries.filter(entry => entry.id !== id);
 };
 
 export default {

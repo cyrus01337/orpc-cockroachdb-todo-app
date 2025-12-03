@@ -1,8 +1,8 @@
 "use client";
 
 import Render from "~/components/client/render";
-import LoadingEntry from "./entry/loading";
-import EntryCreator from "./entry-creator";
+import LoadingEntry from "~/app/_components/entry/loading";
+import EntryCreator from "~/app/_components/entry-creator";
 import { useAtom } from "jotai";
 import { savingEntryAtom } from "~/store";
 import { useSession } from "next-auth/react";
@@ -17,7 +17,7 @@ import sharedSchemas from "~/shared/schemas";
 import { z as zod } from "zod";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
-const DO_NOTHING = () => {};
+const DO_NOTHING = () => { };
 
 export default function Entries() {
     const [saving] = useAtom(savingEntryAtom);
@@ -46,7 +46,6 @@ export default function Entries() {
 
     useEffect(() => {
         if (session?.user.isNewUser && localTodoEntries && localTodoEntries.length > 0) {
-            logging.log("Session (Effect):", session);
             populateUser(session.user.id);
         } else if (session?.user.isNewUser) {
             orpc.user.disableNewUserFlag({ userId: session.user.id });
@@ -73,12 +72,12 @@ export default function Entries() {
 
                     {todoEntries && todoEntries.length > 0
                         ? todoEntries.map(data => (
-                              <Entry
-                                  key={`entry-${data.id}`}
-                                  setTodoEntries={setTodoEntries}
-                                  {...data}
-                              />
-                          ))
+                            <Entry
+                                key={`entry-${data.id}`}
+                                setTodoEntries={setTodoEntries}
+                                {...data}
+                            />
+                        ))
                         : null}
 
                     {saving ? <LoadingEntry /> : null}

@@ -13,7 +13,6 @@ export const createTodo = os
 export const readTodo = os
     .input(sharedSchemas.TODO.pick({ id: true }))
     .handler(async ({ input }) => await database.readTodoEntries(input.id));
-export const readAllTodos = os.handler(async () => await database.readTodoEntries());
 export const updateTodo = os
     .input(sharedSchemas.UPDATE_TODO)
     .handler(async ({ input }) => await database.updateTodoEntry(input.id, omit(input, "id")));
@@ -28,7 +27,6 @@ export const router = {
     todos: {
         create: createTodo,
         read: readTodo,
-        readAll: readAllTodos,
         update: updateTodo,
         delete: deleteTodo,
     },

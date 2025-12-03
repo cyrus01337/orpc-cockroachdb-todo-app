@@ -14,7 +14,7 @@ export default function Navbar() {
     return (
         <nav className="bg-base-100 sticky top-0 box-border flex w-full flex-row justify-between items-center p-4 shadow-lg">
             <Link className="text-3xl font-bold transition-colors hover:text-primary" href="/">
-                Balls
+                ORPC + CockroachDB Todo App
             </Link>
 
             <div className="flex flex-row gap-2">
