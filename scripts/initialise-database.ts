@@ -27,7 +27,7 @@ await SQL`
         due_date TIMESTAMP WITHOUT TIME ZONE DEFAULT NULL,
         priority todo_app.priority NOT NULL,
 
-        FOREIGN KEY (user_id) REFERENCES todo_app.users(id)
+        FOREIGN KEY (user_id) REFERENCES todo_app.users(id) ON DELETE CASCADE
     );
 `.simple();
 await SQL.end({ timeout: 5 });
