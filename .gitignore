@@ -132,3 +132,5 @@ dist
 # Neovim artifacts
 .Trash-*/
 
+# Ignore Better Auth database migrations
+better-auth_migrations/

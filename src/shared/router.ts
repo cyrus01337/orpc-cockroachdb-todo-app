@@ -23,7 +23,7 @@ export const disableNewUserFlag = os
     .input(sharedSchemas.DISABLE_NEW_USER_FLAG)
     .handler(async ({ input }) => await database.disableNewUserFlag(input.userId));
 
-export const router = {
+export default {
     todos: {
         create: createTodo,
         read: readTodo,
